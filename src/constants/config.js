@@ -8,4 +8,6 @@ module.exports = {
         NONE: "none",
         ONLY_FAILED: "onlyFailed",
     },
+    NODEJS_TEST_RUN_ENV: "nodejs",
+    BROWSER_TEST_RUN_ENV: "browser",
 };

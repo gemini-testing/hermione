@@ -2,7 +2,8 @@ import { CommanderStatic } from "@gemini-testing/commander";
 import * as _ from "lodash";
 import { Stats as RunnerStats } from "./stats";
 import { BaseHermione } from "./base-hermione";
-import { MainRunner } from "./runner";
+import { MainRunner as NodejsEnvRunner } from "./runner";
+import { MainRunner as BrowserEnvRunner } from "./runner/browser-env";
 import RuntimeConfig from "./config/runtime-config";
 import { MasterAsyncEvents, MasterEvents, MasterSyncEvents } from "./events";
 import eventsUtils from "./events/utils";
@@ -12,6 +13,7 @@ import { TestCollection } from "./test-collection";
 import { validateUnknownBrowsers } from "./validators";
 import { initReporters } from "./reporters";
 import logger from "./utils/logger";
+import { isRunInNodeJsEnv } from "./utils/config";
 import { ConfigInput } from "./config/types";
 import { MasterEventHandler, Test } from "./types";
 
@@ -47,7 +49,7 @@ export interface Hermione {
 
 export class Hermione extends BaseHermione {
     protected failed: boolean;
-    protected runner: MainRunner | null;
+    protected runner: NodejsEnvRunner | BrowserEnvRunner | null;
 
     constructor(config?: string | ConfigInput) {
         super(config);
@@ -82,7 +84,10 @@ export class Hermione extends BaseHermione {
             this._config.system.mochaOpts.timeout = 0;
         }
 
-        const runner = MainRunner.create(this._config, this._interceptors);
+        const runner = (isRunInNodeJsEnv(this._config) ? NodejsEnvRunner : BrowserEnvRunner).create(
+            this._config,
+            this._interceptors,
+        );
         this.runner = runner;
 
         this.on(MasterEvents.TEST_FAIL, () => this._fail()).on(MasterEvents.ERROR, (err: Error) => this.halt(err));

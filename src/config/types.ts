@@ -1,5 +1,6 @@
 import type { SetRequired } from "type-fest";
 import type { BrowserConfig } from "./browser-config";
+import type { BrowserTestRunEnvOptions } from "../runner/browser-env/vite/types";
 import type { Test } from "../types";
 
 export interface CompareOptsConfig {
@@ -71,6 +72,7 @@ export interface SystemConfig {
     tempDir: string;
     parallelLimit: number;
     fileExtensions: Array<string>;
+    testRunEnv: "nodejs" | "browser" | ["browser", BrowserTestRunEnvOptions];
 }
 
 export interface CommonConfig {
@@ -143,6 +145,11 @@ export type ConfigInput = {
     sets?: Record<string, SetsConfig>;
     prepareEnvironment?: () => void | null;
 };
+
+export interface RuntimeConfig {
+    extend: (data: unknown) => this;
+    [key: string]: unknown;
+}
 
 declare module "." {
     export interface Config extends CommonConfig {

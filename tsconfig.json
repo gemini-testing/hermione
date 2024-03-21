@@ -1,8 +1,19 @@
 {
     "extends": "./tsconfig.common.json",
     "include": ["src"],
-    "exclude": ["src/**/__*", "src/**/*.test.ts", "src/browser/client-scripts", "src/bundle"],
+    "exclude": [
+        "src/**/__*",
+        "src/**/*.test.ts",
+        "src/browser/client-scripts",
+        "src/bundle",
+        "src/runner/browser-env/vite/browser-modules"
+    ],
     "compilerOptions": {
         "outDir": "build"
-    }
+    },
+    "references": [
+        {
+            "path": "./src/runner/browser-env/vite/browser-modules/tsconfig.json"
+        }
+    ]
 }

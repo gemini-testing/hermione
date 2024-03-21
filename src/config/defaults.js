@@ -1,6 +1,6 @@
 "use strict";
 
-const { WEBDRIVER_PROTOCOL, SAVE_HISTORY_MODE } = require("../constants/config");
+const { WEBDRIVER_PROTOCOL, SAVE_HISTORY_MODE, NODEJS_TEST_RUN_ENV } = require("../constants/config");
 
 module.exports = {
     baseUrl: "http://localhost",
@@ -93,6 +93,7 @@ module.exports = {
     region: null,
     headless: null,
     isolation: null,
+    testRunEnv: NODEJS_TEST_RUN_ENV,
 };
 
 module.exports.configPaths = [".hermione.conf.ts", ".hermione.conf.js"];

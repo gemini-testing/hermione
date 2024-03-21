@@ -1,5 +1,6 @@
 import { Events } from "../events";
-import { MainRunner } from "../runner";
+import { MainRunner as NodejsEnvRunner } from "../runner";
+import { MainRunner as BrowserEnvRunner } from "../runner/browser-env/index";
 import { TestCollection } from "../test-collection";
 import type { Test } from "../test-reader/test-object/test";
 import type { Suite } from "../test-reader/test-object/suite";
@@ -11,6 +12,7 @@ import { SkipController } from "../test-reader/controllers/skip-controller";
 import { BrowserVersionController } from "../test-reader/controllers/browser-version-controller";
 import { WorkerProcess } from "../utils/worker-process";
 import { BaseHermione } from "../base-hermione";
+import Callstack from "../browser/history/callstack";
 import { CoordBounds, LooksSameOptions } from "looks-same";
 
 export { Suite as RunnerSuite, Test as RunnerTest, Hook as RunnerHook } from "mocha";
@@ -151,6 +153,10 @@ export interface BeforeFileReadData extends AfterFileReadData {
     testParser: TestParserAPI;
 }
 
+export interface BrowserHistory {
+    runGroup: (callstack: Callstack, name: string, fn: () => unknown | Promise<unknown>) => Promise<unknown>;
+}
+
 export type SyncSessionEventCallback = (
     browser: WebdriverIO.Browser,
     browserInfo: { browserId: string; browserVersion: string },
@@ -158,7 +164,7 @@ export type SyncSessionEventCallback = (
 
 export type MasterEventHandler<T extends BaseHermione> = {
     (event: Events["INIT"], callback: () => Promise<void> | void): T;
-    (event: Events["RUNNER_START"], callback: (runner: MainRunner) => Promise<void> | void): T;
+    (event: Events["RUNNER_START"], callback: (runner: NodejsEnvRunner | BrowserEnvRunner) => Promise<void> | void): T;
     (event: Events["RUNNER_END"], callback: (result: StatsResult) => Promise<void> | void): T;
     (event: Events["SESSION_START"], callback: AsyncSessionEventCallback): T;
     (event: Events["SESSION_END"], callback: AsyncSessionEventCallback): T;

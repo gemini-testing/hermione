@@ -1,10 +1,11 @@
 "use strict";
 
 const _ = require("lodash");
+const { MissingOptionError } = require("gemini-configparser");
 const { Config } = require("src/config");
 const defaults = require("src/config/defaults");
 const parser = require("src/config/options");
-const { MissingOptionError } = require("gemini-configparser");
+const { NODEJS_TEST_RUN_ENV, BROWSER_TEST_RUN_ENV } = require("src/constants/config");
 
 describe("config options", () => {
     const sandbox = sinon.createSandbox();
@@ -344,6 +345,108 @@ describe("config options", () => {
                 const config = createConfig();
 
                 assert.deepEqual(config.system.fileExtensions, fileExtensions);
+            });
+        });
+
+        describe("testRunEnv", () => {
+            it("should set default test run environment", () => {
+                const config = createConfig();
+
+                assert.deepEqual(config.system.testRunEnv, defaults.testRunEnv);
+            });
+
+            describe('should throw error if "testRunEnv" option', () => {
+                it("is not string or array", () => {
+                    const value = 123;
+                    const readConfig = _.set({}, "system.testRunEnv", value);
+                    Config.read.returns(readConfig);
+
+                    assert.throws(
+                        () => createConfig(),
+                        Error,
+                        `"testRunEnv" must be an array or string but got ${JSON.stringify(value)}`,
+                    );
+                });
+
+                it(`is string but not "${NODEJS_TEST_RUN_ENV}" or "${BROWSER_TEST_RUN_ENV}"`, () => {
+                    const readConfig = _.set({}, "system.testRunEnv", "foo");
+                    Config.read.returns(readConfig);
+
+                    assert.throws(
+                        () => createConfig(),
+                        Error,
+                        `"testRunEnv" specified as string must be "${NODEJS_TEST_RUN_ENV}" or "${BROWSER_TEST_RUN_ENV}" but got "foo"`,
+                    );
+                });
+
+                it(`is array with "${NODEJS_TEST_RUN_ENV}" value`, () => {
+                    const value = [NODEJS_TEST_RUN_ENV];
+                    const readConfig = _.set({}, "system.testRunEnv", value);
+                    Config.read.returns(readConfig);
+
+                    assert.throws(
+                        () => createConfig(),
+                        Error,
+                        `"testRunEnv" with "${NODEJS_TEST_RUN_ENV}" value must be specified as string but got ${JSON.stringify(
+                            value,
+                        )}`,
+                    );
+                });
+
+                it(`is array with "${BROWSER_TEST_RUN_ENV}" but without options as second element`, () => {
+                    const value = [BROWSER_TEST_RUN_ENV];
+                    const readConfig = _.set({}, "system.testRunEnv", value);
+                    Config.read.returns(readConfig);
+
+                    assert.throws(
+                        () => createConfig(),
+                        Error,
+                        `"testRunEnv" specified as array must also contain options as second argument but got ${JSON.stringify(
+                            value,
+                        )}`,
+                    );
+                });
+
+                it(`is array without "${BROWSER_TEST_RUN_ENV}" as first element`, () => {
+                    const value = ["foo"];
+                    const readConfig = _.set({}, "system.testRunEnv", value);
+                    Config.read.returns(readConfig);
+
+                    assert.throws(
+                        () => createConfig(),
+                        Error,
+                        `"testRunEnv" specified as array must be in format ["${BROWSER_TEST_RUN_ENV}", <options>] but got ${JSON.stringify(
+                            value,
+                        )}`,
+                    );
+                });
+            });
+
+            it(`should set "testRunEnv" option with ${NODEJS_TEST_RUN_ENV}`, () => {
+                const readConfig = _.set({}, "system.testRunEnv", NODEJS_TEST_RUN_ENV);
+                Config.read.returns(readConfig);
+
+                const config = createConfig();
+
+                assert.deepEqual(config.system.testRunEnv, NODEJS_TEST_RUN_ENV);
+            });
+
+            it(`should set "testRunEnv" option with ${BROWSER_TEST_RUN_ENV}`, () => {
+                const readConfig = _.set({}, "system.testRunEnv", BROWSER_TEST_RUN_ENV);
+                Config.read.returns(readConfig);
+
+                const config = createConfig();
+
+                assert.deepEqual(config.system.testRunEnv, BROWSER_TEST_RUN_ENV);
+            });
+
+            it(`should set "testRunEnv" option with ${BROWSER_TEST_RUN_ENV} and options`, () => {
+                const readConfig = _.set({}, "system.testRunEnv", [BROWSER_TEST_RUN_ENV, {}]);
+                Config.read.returns(readConfig);
+
+                const config = createConfig();
+
+                assert.deepEqual(config.system.testRunEnv, [BROWSER_TEST_RUN_ENV, {}]);
             });
         });
     });

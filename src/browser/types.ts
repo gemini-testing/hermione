@@ -1,6 +1,7 @@
 import type { AssertViewCommand, AssertViewElementCommand } from "./commands/types";
 import type { BrowserConfig } from "./../config/browser-config";
 import type { AssertViewResult, RunnerTest, RunnerHook } from "../types";
+import Callstack from "./history/callstack";
 
 export interface BrowserMeta {
     pid: number;
@@ -13,6 +14,7 @@ export interface Browser {
     config: BrowserConfig;
     state: Record<string, unknown>;
     applyState: (state: Record<string, unknown>) => void;
+    callstackHistory: Callstack;
 }
 
 declare global {

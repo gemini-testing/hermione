@@ -1,6 +1,7 @@
 {
     "extends": "./tsconfig.common.json",
     "include": ["src", "test"],
+    "exclude": ["src/runner/browser-env/vite/browser-modules"],
     "compilerOptions": {
         "baseUrl": ".",
         "noEmit": true,

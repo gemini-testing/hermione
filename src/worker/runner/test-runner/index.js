@@ -2,6 +2,7 @@
 "use strict";
 
 const _ = require("lodash");
+const { Runner } = require("./runner");
 const HookRunner = require("./hook-runner");
 const ExecutionThread = require("./execution-thread");
 const OneTimeScreenshooter = require("./one-time-screenshooter");
@@ -9,20 +10,23 @@ const { AssertViewError } = require("../../../browser/commands/assert-view/error
 const history = require("../../../browser/history");
 const { SAVE_HISTORY_MODE } = require("../../../constants/config");
 
-module.exports = class TestRunner {
+module.exports = class TestRunner extends Runner {
     static create(...args) {
         return new this(...args);
     }
 
-    constructor(test, config, browserAgent) {
+    constructor({ test, file, config, browserAgent }) {
+        super();
+
         this._test = test.clone();
         this._test.hermioneCtx = _.cloneDeep(test.hermioneCtx);
 
+        this._file = file;
         this._config = config;
         this._browserAgent = browserAgent;
     }
 
-    async run({ sessionId, sessionCaps, sessionOpts, state }) {
+    async run({ sessionId, sessionCaps, sessionOpts, state, ExecutionThreadCls = ExecutionThread }) {
         const test = this._test;
         const hermioneCtx = test.hermioneCtx || {};
 
@@ -35,23 +39,20 @@ module.exports = class TestRunner {
         }
 
         const screenshooter = OneTimeScreenshooter.create(this._config, browser);
-        const executionThread = ExecutionThread.create({ test, browser, hermioneCtx, screenshooter });
+        const executionThread = ExecutionThreadCls.create({ test, browser, hermioneCtx, screenshooter });
         const hookRunner = HookRunner.create(test, executionThread);
         const { callstackHistory } = browser;
 
         let error;
 
         try {
-            const { resetCursor } = browser.config;
-            const shouldRunBeforeEach = resetCursor || hookRunner.hasBeforeEachHooks();
+            const preparePageActions = this._getPreparePageActions(browser, history);
+            const shouldRunBeforeEach = preparePageActions.length || hookRunner.hasBeforeEachHooks();
 
             if (shouldRunBeforeEach) {
                 await history.runGroup(callstackHistory, "beforeEach", async () => {
-                    if (resetCursor) {
-                        // TODO: make it on browser.init when "actions" method will be implemented in all webdrivers
-                        await history.runGroup(callstackHistory, "resetCursor", () =>
-                            this._resetCursorPosition(browser),
-                        );
+                    for (const action of preparePageActions) {
+                        await action();
                     }
 
                     await hookRunner.runBeforeEachHooks();
@@ -115,6 +116,19 @@ module.exports = class TestRunner {
         }
 
         return results;
+    }
+
+    _getPreparePageActions(browser, history) {
+        if (!browser.config.resetCursor) {
+            return [];
+        }
+
+        const fn = async () => {
+            // TODO: make it on browser.init when "actions" method will be implemented in all webdrivers
+            await history.runGroup(browser.callstackHistory, "resetCursor", () => this._resetCursorPosition(browser));
+        };
+
+        return [fn];
     }
 
     async _resetCursorPosition({ publicAPI: session }) {

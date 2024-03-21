@@ -8,7 +8,7 @@
     "typings"
   ],
   "scripts": {
-    "build": "tsc && npm run copy-static && npm run build-bundle -- --minify",
+    "build": "tsc --build && npm run copy-static && npm run build-bundle -- --minify",
     "build-bundle": "esbuild ./src/bundle/index.ts --outdir=./build/src/bundle --bundle --format=cjs --platform=node --target=ES2021",
     "copy-static": "copyfiles 'src/browser/client-scripts/*' build",
     "check-types": "tsc --project tsconfig.spec.json",
@@ -25,7 +25,7 @@
     "commitmsg": "commitlint -e",
     "release": "standard-version",
     "watch": "npm run copy-static && concurrently -c 'auto' 'npm:watch:src' 'npm:watch:bundle'",
-    "watch:src": "tsc --watch",
+    "watch:src": "tsc --build --watch",
     "watch:bundle": "npm run build-bundle -- --watch"
   },
   "repository": {
@@ -62,7 +62,9 @@
     "fastq": "1.13.0",
     "fs-extra": "5.0.0",
     "gemini-configparser": "1.3.0",
+    "get-port": "5.1.1",
     "glob-extra": "5.0.2",
+    "import-meta-resolve": "4.0.0",
     "lodash": "4.17.21",
     "looks-same": "9.0.0",
     "micromatch": "4.0.5",
@@ -77,6 +79,7 @@
     "uglifyify": "3.0.4",
     "urijs": "1.19.11",
     "url-join": "4.0.1",
+    "vite": "5.1.6",
     "webdriverio": "8.21.0",
     "worker-farm": "1.7.0",
     "yallist": "3.1.1"
@@ -95,12 +98,14 @@
     "@types/bluebird": "3.5.38",
     "@types/chai": "4.3.4",
     "@types/chai-as-promised": "7.1.5",
+    "@types/debug": "4.1.12",
     "@types/lodash": "4.14.191",
     "@types/node": "18.19.3",
     "@types/proxyquire": "1.3.28",
     "@types/sharp": "0.31.1",
     "@types/sinon": "4.3.3",
     "@types/sinonjs__fake-timers": "8.1.2",
+    "@types/urijs": "1.19.25",
     "@typescript-eslint/eslint-plugin": "6.12.0",
     "@typescript-eslint/parser": "6.12.0",
     "app-module-path": "2.2.0",

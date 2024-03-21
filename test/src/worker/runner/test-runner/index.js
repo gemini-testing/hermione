@@ -27,10 +27,11 @@ describe("worker/runner/test-runner", () => {
 
     const mkRunner_ = (opts = {}) => {
         const test = opts.test || mkTest_();
+        const file = opts.file || "/default/file/path";
         const config = opts.config || makeConfigStub();
         const browserAgent = opts.browserAgent || Object.create(BrowserAgent.prototype);
 
-        return TestRunner.create(test, config, browserAgent);
+        return TestRunner.create({ test, file, config, browserAgent });
     };
 
     const mkElement_ = proto => {

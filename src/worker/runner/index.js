@@ -5,8 +5,10 @@ const { passthroughEvent } = require("../../events/utils");
 const { WorkerEvents } = require("../../events");
 const BrowserPool = require("./browser-pool");
 const BrowserAgent = require("./browser-agent");
-const TestRunner = require("./test-runner");
+const NodejsEnvTestRunner = require("./test-runner");
+const { TestRunner: BrowserEnvTestRunner } = require("../browser-env/runner/test-runner");
 const CachingTestParser = require("./caching-test-parser");
+const { isRunInNodeJsEnv } = require("../../utils/config");
 
 module.exports = class Runner extends AsyncEmitter {
     static create(config) {
@@ -31,7 +33,12 @@ module.exports = class Runner extends AsyncEmitter {
         const tests = await this._testParser.parse({ file, browserId });
         const test = tests.find(t => t.fullTitle() === fullTitle);
         const browserAgent = BrowserAgent.create({ id: browserId, version: browserVersion, pool: this._browserPool });
-        const runner = TestRunner.create(test, this._config.forBrowser(browserId), browserAgent);
+        const runner = (isRunInNodeJsEnv(this._config) ? NodejsEnvTestRunner : BrowserEnvTestRunner).create({
+            test,
+            file,
+            config: this._config.forBrowser(browserId),
+            browserAgent,
+        });
 
         return runner.run({ sessionId, sessionCaps, sessionOpts, state });
     }

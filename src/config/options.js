@@ -5,6 +5,7 @@ const { root, section, map, option } = require("gemini-configparser");
 const browserOptions = require("./browser-options");
 const defaults = require("./defaults");
 const optionsBuilder = require("./options-builder");
+const { NODEJS_TEST_RUN_ENV, BROWSER_TEST_RUN_ENV } = require("../constants/config");
 
 const options = optionsBuilder(_.propertyOf(defaults));
 
@@ -51,6 +52,51 @@ const rootSection = section(
                     if (value.some(v => !v.startsWith("."))) {
                         throw new Error(
                             `Each extension from "fileExtensions" must start with dot symbol but got ${JSON.stringify(
+                                value,
+                            )}`,
+                        );
+                    }
+                },
+            }),
+
+            testRunEnv: option({
+                defaultValue: defaults.testRunEnv,
+                validate: value => {
+                    if (!_.isArray(value) && !_.isString(value)) {
+                        throw new Error(`"testRunEnv" must be an array or string but got ${JSON.stringify(value)}`);
+                    }
+
+                    if (_.isString(value)) {
+                        if (value !== NODEJS_TEST_RUN_ENV && value !== BROWSER_TEST_RUN_ENV) {
+                            throw new Error(
+                                `"testRunEnv" specified as string must be "${NODEJS_TEST_RUN_ENV}" or "${BROWSER_TEST_RUN_ENV}" but got "${value}"`,
+                            );
+                        }
+
+                        return;
+                    }
+
+                    const [testRunEnv, options] = value;
+
+                    if (testRunEnv === NODEJS_TEST_RUN_ENV) {
+                        throw new Error(
+                            `"testRunEnv" with "${NODEJS_TEST_RUN_ENV}" value must be specified as string but got ${JSON.stringify(
+                                value,
+                            )}`,
+                        );
+                    }
+
+                    if (testRunEnv === BROWSER_TEST_RUN_ENV && !options) {
+                        throw new Error(
+                            `"testRunEnv" specified as array must also contain options as second argument but got ${JSON.stringify(
+                                value,
+                            )}`,
+                        );
+                    }
+
+                    if (testRunEnv !== BROWSER_TEST_RUN_ENV) {
+                        throw new Error(
+                            `"testRunEnv" specified as array must be in format ["${BROWSER_TEST_RUN_ENV}", <options>] but got ${JSON.stringify(
                                 value,
                             )}`,
                         );

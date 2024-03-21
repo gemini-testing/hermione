@@ -7,6 +7,8 @@ const debug = require("debug")(`hermione:worker:${process.pid}`);
 const ipc = require("../utils/ipc");
 const { MASTER_INIT, MASTER_SYNC_CONFIG, WORKER_INIT, WORKER_SYNC_CONFIG } = require("../constants/process-messages");
 const { requireModule } = require("../utils/module");
+const { isRunInNodeJsEnv } = require("../utils/config");
+const { ViteWorkerCommunicator } = require("./browser-env/communicator");
 
 module.exports = class HermioneFacade {
     static create() {
@@ -78,6 +80,11 @@ module.exports = class HermioneFacade {
             ipc.on(MASTER_SYNC_CONFIG, ({ config } = {}) => {
                 delete config.system.mochaOpts.grep; // grep affects only master
                 this._hermione.config.mergeWith(config);
+
+                if (!isRunInNodeJsEnv(this._hermione.config)) {
+                    const communicator = ViteWorkerCommunicator.create(this._hermione.config);
+                    RuntimeConfig.getInstance().extend({ viteWorkerCommunicator: communicator });
+                }
 
                 debug("config synced");
                 resolve();
